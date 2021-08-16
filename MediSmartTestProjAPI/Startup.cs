@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MediSmartTestProjAPI.Models;
+using MediSmartTestProjAPI.Utility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -27,7 +28,11 @@ namespace MediSmartTestProjAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors();
+
             services.AddControllers();
+            services.AddScoped<IUtilities, Utilities>();
+
             services.AddSwaggerGen();
             services.AddDbContext<MediSmartDBContext>(options =>
             options.UseSqlServer(Configuration.GetConnectionString("MediSmartDB")), ServiceLifetime.Transient);
@@ -44,7 +49,7 @@ namespace MediSmartTestProjAPI
             // specifying the Swagger JSON endpoint.
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Medismart API");
             });
 
             if (env.IsDevelopment())
@@ -56,7 +61,8 @@ namespace MediSmartTestProjAPI
 
             app.UseRouting();
 
-            app.UseAuthorization();
+            app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+            //app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {

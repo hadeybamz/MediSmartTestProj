@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-
-#nullable disable
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace MediSmartTestProjAPI.Models
 {
-    public partial class Registration
+    public class RegistrationDTOW
     {
-        [Key]
-        public int id { get; set; }
-
         [Required]
         [MaxLength(100)]
         public string firstName { get; set; }
@@ -24,7 +21,7 @@ namespace MediSmartTestProjAPI.Models
 
         [Required]
         public DateTime dateOfBirth { get; set; }
-        
+
         [Required]
         [MaxLength(15)]
         public string gender { get; set; }

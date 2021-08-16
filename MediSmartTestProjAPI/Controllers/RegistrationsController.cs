@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MediSmartTestProjAPI.Models;
+using Omu.ValueInjecter;
+using MediSmartTestProjAPI.Utility;
 
 namespace MediSmartTestProjAPI.Controllers
 {
@@ -14,96 +16,195 @@ namespace MediSmartTestProjAPI.Controllers
     public class RegistrationsController : ControllerBase
     {
         private readonly MediSmartDBContext _context;
+        private readonly IUtilities _utilities;
+        private string serverResponse = "Sorry,something went wrong while processing your request! We've noted it and we are going to fix this asap.";
 
-        public RegistrationsController(MediSmartDBContext context)
+        public RegistrationsController(MediSmartDBContext context, IUtilities utilities)
         {
             _context = context;
+            _utilities = utilities;
         }
 
         // GET: api/Registrations
         [HttpGet]
+        [Route("getall")]
         public async Task<ActionResult<IEnumerable<Registration>>> GetRegistrations()
         {
-            return await _context.Registrations.ToListAsync();
+            try
+            {
+                var result = await _utilities.GetAllRegistrationTask();
+
+                if (result == null)
+                {
+                    return Ok(new JsonMessage<string>()
+                    {
+                        Success = false,
+                        ErrorMessage = "No Record Found"
+                    });
+                }
+
+                return Ok(new JsonMessage<Registration>()
+                {
+                    Success = true,
+                    Results = result
+                });
+            }
+            catch(Exception ex)
+            {
+                return Ok(new JsonMessage<string>()
+                {
+                    Success = false,
+                    ErrorMessage = serverResponse
+                });
+            }
+            
         }
 
         // GET: api/Registrations/5
-        [HttpGet("{id}")]
+        [HttpGet]
+        [Route("get/{id}")]
         public async Task<ActionResult<Registration>> GetRegistration(int id)
         {
-            var registration = await _context.Registrations.FindAsync(id);
-
-            if (registration == null)
+            try
             {
-                return NotFound();
+                var registration = await _utilities.GetRegistrationById(id);
+
+                if (registration == null)
+                {
+                    return Ok(new JsonMessage<string>()
+                    {
+                        Success = false,
+                        ErrorMessage = "No Record Found"
+                    });
+                }
+
+                return Ok(new JsonMessage<Registration>()
+                {
+                    Success = true,
+                    Results = new List<Registration> { registration }
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new JsonMessage<string>()
+                {
+                    Success = false,
+                    ErrorMessage = serverResponse
+                });
             }
 
-            return registration;
         }
 
         // PUT: api/Registrations/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for
-        // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutRegistration(int id, Registration registration)
+        [HttpPut()]
+        [Route("update/{id}")]
+        public async Task<IActionResult> PutRegistration(int id, RegistrationDTOW registration)
         {
-            if (id != registration.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(registration).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!RegistrationExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+                var result = await _utilities.GetRegistration(id);
 
-            return NoContent();
+                if (result != null)
+                {
+                    result.InjectFrom(registration);
+
+                    _context.Entry(result).State = EntityState.Modified;
+                    await _context.SaveChangesAsync();
+
+                    return Ok(new JsonMessage<Registration>()
+                    {
+                        Success = true
+                    });
+                }
+
+                return Ok(new JsonMessage<string>()
+                {
+                    Success = false,
+                    ErrorMessage = "No Record Found"
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new JsonMessage<string>()
+                {
+                    Success = false,
+                    ErrorMessage = serverResponse
+                });
+
+            }
         }
 
         // POST: api/Registrations
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for
-        // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPost]
-        public async Task<ActionResult<Registration>> PostRegistration(Registration registration)
+        public async Task<IActionResult> PostRegistration(Registration registration)
         {
-            _context.Registrations.Add(registration);
-            await _context.SaveChangesAsync();
+            try
+            {
+                var result = _context.Registrations.Add(registration);
 
-            return CreatedAtAction("GetRegistration", new { id = registration.Id }, registration);
+                if (result == null)
+                {
+                    return Ok(new JsonMessage<string>()
+                    {
+                        Success = false,
+                        ErrorMessage = "No Record Found"
+                    });
+                }
+                await _context.SaveChangesAsync();
+
+                return Ok(new JsonMessage<string>()
+                {
+                    Success = true,
+                });
+
+            }
+
+            catch (Exception ex)
+            {
+                return Ok(new JsonMessage<string>()
+                {
+                    Success = false,
+                    ErrorMessage = serverResponse
+                });
+
+            }
         }
 
         // DELETE: api/Registrations/5
-        [HttpDelete("{id}")]
+        [HttpDelete()]
+        [Route("delete/{id}")]
         public async Task<ActionResult<Registration>> DeleteRegistration(int id)
         {
-            var registration = await _context.Registrations.FindAsync(id);
-            if (registration == null)
+            try
             {
-                return NotFound();
+                var registration = await _utilities.GetRegistration(id);
+                if (registration == null)
+                {
+                    return Ok(new JsonMessage<string>()
+                    {
+                        Success = true,
+                        ErrorMessage = "No Record Found"
+                    });
+                }
+
+                _context.Registrations.Remove(registration);
+                await _context.SaveChangesAsync();
+                return Ok(new JsonMessage<string>()
+                {
+                    Success = true
+                });
             }
+            catch (Exception ex)
+            {
+                return Ok(new JsonMessage<string>()
+                {
+                    Success = false,
+                    ErrorMessage = serverResponse
+                });
 
-            _context.Registrations.Remove(registration);
-            await _context.SaveChangesAsync();
-
-            return registration;
+            }
         }
 
-        private bool RegistrationExists(int id)
-        {
-            return _context.Registrations.Any(e => e.Id == id);
-        }
+
     }
 }

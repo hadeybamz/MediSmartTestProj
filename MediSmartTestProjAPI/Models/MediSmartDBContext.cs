@@ -8,10 +8,6 @@ namespace MediSmartTestProjAPI.Models
 {
     public partial class MediSmartDBContext : DbContext
     {
-        public MediSmartDBContext()
-        {
-        }
-
         public MediSmartDBContext(DbContextOptions<MediSmartDBContext> options)
             : base(options)
         {
