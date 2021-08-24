@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MediSmartTestProjAPI.Interface;
 using MediSmartTestProjAPI.Models;
+using MediSmartTestProjAPI.Repository;
 using MediSmartTestProjAPI.Utility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -36,6 +38,7 @@ namespace MediSmartTestProjAPI
             services.AddSwaggerGen();
             services.AddDbContext<MediSmartDBContext>(options =>
             options.UseSqlServer(Configuration.GetConnectionString("MediSmartDB")), ServiceLifetime.Transient);
+            services.AddScoped<IAuthRepository, AuthRepository>();
 
         }
 
