@@ -8,9 +8,11 @@ using Microsoft.EntityFrameworkCore;
 using MediSmartTestProjAPI.Models;
 using Omu.ValueInjecter;
 using MediSmartTestProjAPI.Utility;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MediSmartTestProjAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class RegistrationsController : ControllerBase
@@ -61,6 +63,7 @@ namespace MediSmartTestProjAPI.Controllers
         }
 
         // GET: api/Registrations/5
+        [AllowAnonymous]
         [HttpGet]
         [Route("get/{id}")]
         public async Task<ActionResult<Registration>> GetRegistration(int id)

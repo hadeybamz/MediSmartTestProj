@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using MediSmartTestProjAPI.Interface;
 using MediSmartTestProjAPI.Models;
 using MediSmartTestProjAPI.Repository;
 using MediSmartTestProjAPI.Utility;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -15,6 +17,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 
 namespace MediSmartTestProjAPI
 {
@@ -39,6 +42,15 @@ namespace MediSmartTestProjAPI
             services.AddDbContext<MediSmartDBContext>(options =>
             options.UseSqlServer(Configuration.GetConnectionString("MediSmartDB")), ServiceLifetime.Transient);
             services.AddScoped<IAuthRepository, AuthRepository>();
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options => {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.GetSection("AppSettings:Token").Value)),
+                        ValidateIssuer = false
+                    };
+                });
 
         }
 
@@ -65,6 +77,7 @@ namespace MediSmartTestProjAPI
             app.UseRouting();
 
             app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+            app.UseAuthentication();
             //app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
