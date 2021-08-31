@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace MediSmartTestProjAPI.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class RegistrationsController : ControllerBase
